@@ -71,7 +71,7 @@ def apply_wah_wah(input_data, depth=1000, rate=0.5):
     return wah_wah_data
 
 # Compressor Effect
-def apply_compressor(input_data, threshold=-20, ratio=4, attack_time=10, release_time=100):
+def apply_compressor(input_data, threshold=-20, ratio=4, attack_time=10):
     output_data = np.zeros_like(input_data)
     envelope = 0.0  # Initialize envelope value
 
@@ -99,9 +99,10 @@ try:
         input_data = np.frombuffer(input_stream.read(chunk_size), dtype=np.float32)
 
         # Applying effects
-        #processed_data = apply_compressor(input_data)
+        processed_data = apply_compressor(input_data)
         #processed_data = apply_overdrive(processed_data)
-        processed_data = apply_chorus(input_data)
+        #processed_data = apply_wah_wah(processed_data)
+        processed_data = apply_chorus(processed_data)
 
         # Received audio output
         output_stream.write(processed_data.tobytes())
