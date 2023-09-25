@@ -3,7 +3,6 @@ import pyaudio
 import numpy as np
 import scipy.signal as ss
 import scipy.interpolate as si
-import sounddevice as sd
 
 # PyAudio basic config
 n_channels_input = 1
@@ -36,24 +35,7 @@ output_stream = p.open(format=pyaudio.paFloat32,
 
 duration = 5  # Duration of the noise-only recording in seconds
 
-# Record the noise-only segment
-print("Recording noise profile...")
-noise_profile = sd.rec(int(sample_rate * duration), samplerate=sample_rate, channels=1)
-sd.wait()  # Wait for the recording to complete
 
-# Convert to a NumPy array
-original_noise_profile = noise_profile[:, 0]
-
-desired_length = 1024
-
-# Calculate the downsampling factor
-downsampling_factor = len(original_noise_profile) // desired_length
-
-# Downsample the noise profile by taking every nth sample
-downsampled_noise_profile = original_noise_profile[::downsampling_factor]
-
-# Ensure the resulting noise profile has the desired length
-downsampled_noise_profile = downsampled_noise_profile[:desired_length]
 
 
 # Compressor Effect
@@ -155,7 +137,7 @@ mean_signal = np.zeros(frame_size)
 
 # Main loop
 try:
-    print("Iniciando a pedaleira de guitarra. Pressione Ctrl+C para sair.")
+    print("Starting Wave FX Hub. Press Ctrl+C to exit.")
     while True:
         # Real time audio input
         input_data = np.frombuffer(input_stream.read(chunk_size), dtype=np.float32)
@@ -167,7 +149,7 @@ try:
 
         # Applying effects
         processed_data = apply_compressor(input_data)
-        processed_data = apply_equalizer(processed_data)
+        #processed_data = apply_equalizer(processed_data)
         processed_data = apply_volume_boost(processed_data)
         #processed_data = apply_pitch_shift(processed_data)
         #processed_data = apply_low_pass_filter(input_data)
@@ -189,10 +171,6 @@ finally:
     output_stream.stop_stream()
     output_stream.close()
     p.terminate()
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(mean_signal * 1.0)
-    plt.show()
 
     # Perform FFT
     fft_result = np.fft.fft(processed_data)

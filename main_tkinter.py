@@ -3,10 +3,12 @@ import numpy as np
 import scipy.signal as ss
 from tkinter import *
 import customtkinter
+import scipy.signal as ss
+import scipy.interpolate as si
 
 class App(customtkinter.CTk):
     def __init__(self):
-        super()__init__()
+        super().__init__()
 
         self.title("Audio Effects Application")
         self.geometry(f"{1100}x{580}")
@@ -20,19 +22,113 @@ class App(customtkinter.CTk):
         
         # Creating Effects Buttons
         compressor_button = customtkinter.CTkButton(master=self, text='Compressor')
-        overdrive_button = customtkinter.CTkButton(master=self, text='Overdrive')
-        wah_wah_button = customtkinter.CTkButton(master=self, text='Wah Wah')
-        Chorus_button = customtkinter.CTkButton(master=self, text='Chorus')
+        equalizer_button = customtkinter.CTkButton(master=self, text='Equalizer')
+        vol_boost_button = customtkinter.CTkButton(master=self, text='Volume Boost')
+        pitch_shift_button = customtkinter.CTkButton(master=self, text='Pitch Shift')
+        low_pass_button = customtkinter.CTkButton(master=self, text='Low Pass Filter')
+        distortion_button = customtkinter.CTkButton(master=self, text='Distortion')
 
         # Place Buttons
+        #self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.sidebar_button_event)
+        #self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
         compressor_button.place(relx=0.5, rely=0.5, anchor=CENTER)
+        equalizer_button.place(relx=0.5, rely=0.5, anchor=CENTER)
+        vol_boost_button.place(relx=0.5, rely=0.5, anchor=CENTER)
+        pitch_shift_button.place(relx=0.5, rely=0.5, anchor=CENTER)
+        low_pass_button.place(relx=0.5, rely=0.5, anchor=CENTER)
+        distortion_button.place(relx=0.5, rely=0.5, anchor=CENTER)
 
-    # Overdrive Effect
-    def apply_overdrive(self, input_data, gain=2.0):
-        return input_data * gain
-    
+    # Starting input and output
+    # Main loop
+    def start_capture(self):
+        # PyAudio basic config
+        n_channels_input = 1
+        n_channels_output = 2
+        sample_rate = 44100  # Sampling Rate [Hz]
+        chunk_size = 1024   # Audio Buffer Size
+
+        # PyAudio object
+        p = pyaudio.PyAudio()
+
+        # Opening Audio Input Stream with the built-in microphone
+        input_stream = p.open(format=pyaudio.paFloat32,
+                            channels=n_channels_input, # Adjust the number of channels as needed
+                            rate=sample_rate,
+                            input=True)
+
+        # Opening Audio Output Stream with the built-in laptop speaker
+        output_stream = p.open(format=pyaudio.paFloat32,
+                            channels=n_channels_output,
+                            rate=sample_rate,
+                            output=True)
+        
+        # Main loop
+        # Calculating the average signal
+        received = 0
+        frame_size = 1024  # Adjust the frame size as needed
+
+        # Initialize an array to store the mean values
+        mean_signal = np.zeros(frame_size)
+
+        try:
+            print("Starting Wave FX Hub. Press Ctrl+C to exit.")
+            while True:
+                # Real time audio input
+                input_data = np.frombuffer(input_stream.read(chunk_size), dtype=np.float32)
+                print(input_data[-1])
+                #print(type(input_data))
+                #print(input_data.shape) -> (1024,0)
+                #print(len(input_data))
+                #print(input_data[1])
+
+                # Applying effects according to the selected effects
+                if(compressor):
+                    processed_data = self.apply_compressor(input_data)
+                if(equalizer):
+                    processed_data = self.apply_equalizer(processed_data)
+                if(vol_boost):
+                    processed_data = self.apply_volume_boost(processed_data)
+                if(pitch_shift):
+                    processed_data = self.apply_pitch_shift(processed_data)
+                if(low_pass):
+                    processed_data = self.apply_low_pass_filter(input_data)
+                if(distortion):
+                    processed_data = self.apply_distortion(input_data)
+                
+                # Average Signal
+                mean_signal += processed_data
+                received += 1.0
+
+                # Received audio output
+                output_stream.write(processed_data.tobytes())
+
+                app.update()
+
+        except KeyboardInterrupt:
+            print("Effects interface stopped.")
+
+        finally:
+            input_stream.stop_stream()
+            input_stream.close()
+            output_stream.stop_stream()
+            output_stream.close()
+            p.terminate()
+
+    def compressor_event():
+        pass
+    def equalizer_event():
+        pass
+    def vol_boost_event():
+        pass
+    def low_pass_event():
+        pass
+    def pitch_shift_event():
+        pass
+    def distortion_event():
+        pass
+
     # Compressor Effect
-    def apply_compressor(self, input_data, threshold=-20, ratio=4, attack_time=10):
+    def apply_compressor(input_data, threshold=-20, ratio=4, attack_time=10):
         output_data = np.zeros_like(input_data)
         envelope = 0.0  # Initialize envelope value
 
@@ -51,90 +147,77 @@ class App(customtkinter.CTk):
 
         return output_data
 
+    # Equalizer Effect
+    def apply_equalizer(input_audio, low_gain=1.0, mid_gain=1.0, high_gain=1.0, sample_rate=44100):
+        # Define filter parameters for each band (frequency range, bandwidth, and order)
+        low_freq_range = [20, 200]  # Adjust as needed
+        mid_freq_range = [200, 2000]  # Adjust as needed
+        high_freq_range = [2000, 20000]  # Adjust as needed
+        
+        # Design bandpass filters for each band
+        low_b = ss.butter(4, [f / (sample_rate / 2) for f in low_freq_range], btype='band')
+        mid_b = ss.butter(4, [f / (sample_rate / 2) for f in mid_freq_range], btype='band')
+        high_b = ss.butter(4, [f / (sample_rate / 2) for f in high_freq_range], btype='band')
+        
+        # Apply the filters to the input audio
+        low_output = ss.lfilter(low_b[0], low_b[1], input_audio) * low_gain
+        mid_output = ss.lfilter(mid_b[0], mid_b[1], input_audio) * mid_gain
+        high_output = ss.lfilter(high_b[0], high_b[1], input_audio) * high_gain
+        
+        # Combine the outputs to create the equalized audio
+        equalized_audio = low_output + mid_output + high_output
+        
+        return equalized_audio
 
-    # Wah Wah Effect
-    def apply_wah_wah(self, input_data, depth=1000, rate=0.5):
-        # Create a modulating wave (sine wave) for the wah-wah effect
-        modulator = np.sin(2 * np.pi * rate * np.arange(len(input_data)))
+    # Volume Boost Effect
+    def apply_volume_boost(input_data, gain=1000.0):
+        return input_data * gain
 
-        # Create a bandpass filter
-        cutoff = depth * modulator + 1000  # Adjust the center frequency and depth as needed
+    # Distortion Effect
+    def apply_distortion(input_audio, gain=100.0):
+        # Rectify the audio signal
+        rectified_signal = np.abs(input_audio)
+
+        # Amplify the rectified signal
+        distorted_signal = rectified_signal * gain
+
+        return distorted_signal
+
+    # Pitch Shift Effect
+    def apply_pitch_shift(input_data, desired_length=1024):
+        # Calculate the pitch shift factor
+        
+        # Calculate the desired output length
+        output_length = int(desired_length)
+        
+        # Create a time array for the input data
+        input_time = np.arange(len(input_data))
+        
+        # Create a time array for the output data
+        output_time = np.arange(output_length) * (len(input_data) / output_length)
+        
+        # Use interpolation to resample the input audio to the desired length
+        interpolator = si.interp1d(input_time, input_data, kind='linear', fill_value="extrapolate")
+        output_data = interpolator(output_time)
+        
+        return output_data
+
+    def apply_low_pass_filter(input_audio, cutoff_frequency=3000, sample_rate=44100, order=4):
+        # Calculate the Nyquist frequency
         nyquist = 0.5 * sample_rate
-        width = 0.1  # Width of the bandpass filter (adjust as needed)
-        order = 21  # Filter order (adjust as needed)
-        b = ss.firwin(order, [cutoff[0] - 0.5 * width, cutoff[0] + 0.5 * width], nyq=nyquist)
-        
-        # Apply the filter to the input data
-        wah_wah_data = ss.lfilter(b, 1.0, input_data)
-        
-        return wah_wah_data
 
-    # Chorus Effect
-    def apply_chorus(self, input_data, depth=500, rate=1):
-        num_delayed_signals = 3  # Number of delayed signals (adjust as needed)
-        max_delay = int(depth * sample_rate / 1000)  # Maximum delay in samples
-        
-        # Initialize the delayed signals
-        delayed_signals = [np.zeros_like(input_data) for _ in range(num_delayed_signals)]
-        
-        # Apply modulation to each delayed signal
-        for i in range(num_delayed_signals):
-            delay = max_delay - (i * max_delay // (num_delayed_signals - 1))
-            modulator = np.sin(2 * np.pi * rate * np.arange(len(input_data)))
-            delayed_signals[i] = np.roll(input_data, delay) * modulator
-            
-        # Combine the original and delayed signals
-        combined_signal = np.mean([input_data] + delayed_signals, axis=0)
-        
-        return combined_signal
+        # Calculate the normalized cutoff frequency
+        normalized_cutoff = cutoff_frequency / nyquist
 
-# PyAudio basic config
-n_channels_input = 1
-n_channels_output = 2
-sample_rate = 44100  # Sampling Rate [Hz]
-chunk_size = 1024   # Audio Buffer Size
-input_device = 1
-output_device = 0
+        # Design the low-pass filter
+        b, a = ss.butter(order, normalized_cutoff, btype='low')
 
-# PyAudio object
-p = pyaudio.PyAudio()
-app = App()
+        # Apply the filter to the input audio
+        filtered_audio = ss.lfilter(b, a, input_audio)
 
-# Opening Audio Input Stream with the built-in microphone
-input_stream = p.open(format=pyaudio.paFloat32,
-                      channels=n_channels_input, # Adjust the number of channels as needed
-                      rate=sample_rate,
-                      input=True)
-
-# Opening Audio Output Stream with the built-in laptop speaker
-output_stream = p.open(format=pyaudio.paFloat32,
-                       channels=n_channels_output,
-                       rate=sample_rate,
-                       output=True)
-
-# Main loop
-try:
-    print("Iniciando a pedaleira de guitarra. Pressione Ctrl+C para sair.")
-    while True:
-        # Real time audio input
-        input_data = np.frombuffer(input_stream.read(chunk_size), dtype=np.float32)
-
-        app.update()
-
-        # Received audio output
-        output_stream.write(processed_data.tobytes())
-
-except KeyboardInterrupt:
-    print("Pedaleira de guitarra encerrada.")
-
-finally:
-    # Close stream
-    input_stream.stop_stream()
-    input_stream.close()
-    output_stream.stop_stream()
-    output_stream.close()
-    p.terminate()
+        return filtered_audio
 
 
 if __name__ == "__main__":
-    app.mainloop()
+    app = App()
+    app.start_capture()
