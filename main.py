@@ -148,16 +148,18 @@ try:
         #print(input_data[1])
 
         # Applying effects
-        processed_data = apply_compressor(input_data)
+        processed_data = input_data
+        #processed_data = apply_compressor(input_data)
         #processed_data = apply_equalizer(processed_data)
-        processed_data = apply_volume_boost(processed_data)
+        #processed_data = apply_volume_boost(processed_data)
         #processed_data = apply_pitch_shift(processed_data)
         #processed_data = apply_low_pass_filter(input_data)
         #processed_data = apply_distortion(input_data)
         
         # Average Signal
-        mean_signal += processed_data
-        received += 1.0
+        #mean_signal += processed_data
+        #received += 1.0
+        processed_data * 
 
         # Received audio output
         output_stream.write(processed_data.tobytes())

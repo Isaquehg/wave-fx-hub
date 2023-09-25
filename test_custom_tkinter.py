@@ -15,8 +15,8 @@ def button_function():
 def compressor_event():
     print("Compressor activated!")
 
-app.title_label = customtkinter.CTkLabel(master=app, width=500, height=30, text_font=('Arial', 13))
-app.title_label.grid(row=0, column=1, columnspan=4, padx=(5, 5), pady=(20, 0), sticky="nsew")
+#app.title_label = customtkinter.CTkLabel(master=app, width=500, height=30, text_font=('Arial', 13))
+#app.title_label.grid(row=0, column=1, columnspan=4, padx=(5, 5), pady=(20, 0), sticky="nsew")
 
 # Creating Effects Buttons
 compressor_button = customtkinter.CTkButton(master=app, text='Compressor', fg_color=("black", "lightgray"), command = compressor_event)
