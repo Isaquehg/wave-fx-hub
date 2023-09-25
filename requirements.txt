@@ -1,25 +1,23 @@
-Package         Version
---------------- -------
-cffi            1.15.1
-contourpy       1.1.1
-customtkinter   5.2.0
-cycler          0.11.0
-darkdetect      0.8.0
-fonttools       4.42.1
-kiwisolver      1.4.5
-matplotlib      3.8.0
-numpy           1.25.2
-packaging       23.1
-Pillow          10.0.1
-pip             22.0.2
-PyAudio         0.2.13
-pycparser       2.21
-pyparsing       3.1.1
-python-dateutil 2.8.2
-python-tkdnd    0.2.1
-scipy           1.11.2
-setuptools      59.6.0
-six             1.16.0
-sounddevice     0.4.6
-tkinterdnd2     0.3.0
-ttkwidgets      0.13.0
+cffi            
+contourpy       
+customtkinter   
+cycler          
+darkdetect     
+fonttools       
+kiwisolver     
+matplotlib    
+numpy           
+packaging      
+Pillow          
+pip            
+PyAudio        
+pycparser     
+pyparsing      
+python-dateutil 
+python-tkdnd  
+scipy          
+setuptools      
+six            
+sounddevice    
+tkinterdnd2    
+ttkwidgets      
