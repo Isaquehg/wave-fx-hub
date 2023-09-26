@@ -7,8 +7,8 @@ import scipy.interpolate as si
 # PyAudio basic config
 n_channels_input = 1
 n_channels_output = 2
-sample_rate = 44100  # Sampling Rate [Hz]
-chunk_size = 1024   # Audio Buffer Size
+sample_rate = 48000  # Sampling Rate [Hz]
+chunk_size = 450   # Audio Buffer Size
 input_device = 1
 output_device = 0
 
@@ -113,7 +113,7 @@ def apply_pitch_shift(input_data, desired_length=1024):
     
     return output_data
 
-def apply_low_pass_filter(input_audio, cutoff_frequency=3000, sample_rate=44100, order=4):
+def apply_low_pass_filter(input_audio, cutoff_frequency=500, sample_rate=44100, order=2):
     # Calculate the Nyquist frequency
     nyquist = 0.5 * sample_rate
 
@@ -149,7 +149,7 @@ try:
 
         # Applying effects
         processed_data = input_data
-        #processed_data = apply_compressor(input_data)
+        processed_data = apply_compressor(processed_data)
         #processed_data = apply_equalizer(processed_data)
         #processed_data = apply_volume_boost(processed_data)
         #processed_data = apply_pitch_shift(processed_data)
@@ -159,7 +159,6 @@ try:
         # Average Signal
         #mean_signal += processed_data
         #received += 1.0
-        processed_data * 
 
         # Received audio output
         output_stream.write(processed_data.tobytes())
