@@ -8,13 +8,15 @@ class Effects():
     def __init__(self, path_to_file: str) -> None:
         # Import audio file -> 48kHz sample rate
         sample_rate, audio_data = read(path_to_file)
+
+        self.sample_rate = sample_rate
         self.audio_data = audio_data
 
         print(sample_rate)
         print(audio_data.shape)
 
         plt.plot(audio_data)
-        #plt.show()
+        plt.show()
 
     # Compressor Effect
     def apply_compressor(self, threshold=-20, ratio=4, attack_time=10):
@@ -37,16 +39,16 @@ class Effects():
         self.audio_data = output_data
 
     # Equalizer Effect
-    def apply_equalizer(self, low_gain=1.0, mid_gain=1.0, high_gain=1.0, sample_rate=44100):
+    def apply_equalizer(self, low_gain=1.0, mid_gain=1.0, high_gain=1.0):
         # Define filter parameters for each band (frequency range, bandwidth, and order)
         low_freq_range = [20, 200]  # Adjust as needed
         mid_freq_range = [200, 2000]  # Adjust as needed
         high_freq_range = [2000, 20000]  # Adjust as needed
         
         # Design bandpass filters for each band
-        low_b = ss.butter(4, [f / (sample_rate / 2) for f in low_freq_range], btype='band')
-        mid_b = ss.butter(4, [f / (sample_rate / 2) for f in mid_freq_range], btype='band')
-        high_b = ss.butter(4, [f / (sample_rate / 2) for f in high_freq_range], btype='band')
+        low_b = ss.butter(4, [f / (self.sample_rate / 2) for f in low_freq_range], btype='band')
+        mid_b = ss.butter(4, [f / (self.sample_rate / 2) for f in mid_freq_range], btype='band')
+        high_b = ss.butter(4, [f / (self.sample_rate / 2) for f in high_freq_range], btype='band')
         
         # Apply the filters to the input audio
         low_output = ss.lfilter(low_b[0], low_b[1], self.audio_data) * low_gain
@@ -63,14 +65,16 @@ class Effects():
         self.audio_data *= gain
 
     # Distortion Effect
-    def apply_distortion(self, gain=100.0):
-        # Rectify the audio signal
-        rectified_signal = np.abs(self.audio_data)
+    def apply_distortion(self, gain=50.0):
+        audio_data = self.audio_data.astype(np.float32)
 
-        # Amplify the rectified signal
-        distorted_signal = rectified_signal * gain
+        # Normalize audio to the range [-1, 1]
+        audio_data /= np.max(np.abs(audio_data))
 
-        self.audio_data = distorted_signal
+        # Apply distortion (clipping)
+        distorted_audio = np.clip(audio_data * gain, -1.0, 1.0)
+
+        self.audio_data = distorted_audio
 
     # Pitch Shift Effect
     def apply_pitch_shift(self, desired_length=1024):
@@ -91,9 +95,9 @@ class Effects():
         
         self.audio_data = output_data
 
-    def apply_low_pass_filter(self, cutoff_frequency=500, sample_rate=44100, order=2):
+    def apply_low_pass_filter(self, cutoff_frequency=500, order=2):
         # Calculate the Nyquist frequency
-        nyquist = 0.5 * sample_rate
+        nyquist = 0.5 * self.sample_rate
 
         # Calculate the normalized cutoff frequency
         normalized_cutoff = cutoff_frequency / nyquist
@@ -108,8 +112,14 @@ class Effects():
 
     def save_audio(self):
         write("output/output_audio.wav", 48000, self.audio_data)
+        plt.plot(self.audio_data)
+        plt.show()
     
 effects = Effects("audios/audio_file.wav")
-effects.apply_compressor()
+#effects.apply_compressor()
+#effects.apply_distortion()
+#effects.apply_equalizer(low_gain=50.0)
+#effects.apply_low_pass_filter()
+#effects.apply_volume_boost()
 
-#effects.save_audio()
+effects.save_audio()
