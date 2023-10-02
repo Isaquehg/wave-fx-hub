@@ -117,8 +117,8 @@ class Effects():
         # Normalize audio to the range [-1, 1]
         audio_data /= np.max(np.abs(audio_data))
 
-        # Initialize the reverb taps with zeros
-        reverb_taps = [np.zeros(max(delay_lengths)) for _ in range(len(delay_lengths))]
+        # Initialize the reverb taps with lists
+        reverb_taps = [list(np.zeros(delay_length)) for delay_length in delay_lengths]
 
         # Create an empty array to store the reverb output
         reverb_output = np.zeros_like(audio_data)
@@ -128,12 +128,12 @@ class Effects():
             for j, delay_length in enumerate(delay_lengths):
                 # Calculate the output for each tap (comb filter)
                 if i >= delay_length:
-                    reverb_taps[j][i % delay_length] = audio_data[i] + feedback * reverb_taps[j][i % delay_length]
+                    reverb_taps[j].append(audio_data[i] + feedback * reverb_taps[j].pop(0))
                 else:
-                    reverb_taps[j][i] = audio_data[i] + feedback * reverb_taps[j][i]
+                    reverb_taps[j].append(audio_data[i] + feedback * reverb_taps[j][-1])
 
                 # Sum the outputs from all taps
-                reverb_output[i] += reverb_taps[j][i % delay_length]
+                reverb_output[i] += reverb_taps[j][-1]
 
         self.audio_data = reverb_output
 
@@ -141,7 +141,8 @@ class Effects():
         write("output/output_audio.wav", 48000, self.audio_data.astype(np.int16))
         plt.plot(self.audio_data)
         plt.show()
-    
+
+
 effects = Effects("audios/audio_file.wav")
 #effects.apply_compressor()
 #effects.apply_distortion()
