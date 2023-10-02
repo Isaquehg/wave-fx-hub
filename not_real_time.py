@@ -39,30 +39,42 @@ class Effects():
         self.audio_data = output_data
 
     # Equalizer Effect
-    def apply_equalizer(self, low_gain=1.0, mid_gain=1.0, high_gain=1.0):
-        # Define filter parameters for each band (frequency range, bandwidth, and order)
-        low_freq_range = [20, 200]  # Adjust as needed
-        mid_freq_range = [200, 2000]  # Adjust as needed
-        high_freq_range = [2000, 20000]  # Adjust as needed
-        
-        # Design bandpass filters for each band
-        low_b = ss.butter(4, [f / (self.sample_rate / 2) for f in low_freq_range], btype='band')
-        mid_b = ss.butter(4, [f / (self.sample_rate / 2) for f in mid_freq_range], btype='band')
-        high_b = ss.butter(4, [f / (self.sample_rate / 2) for f in high_freq_range], btype='band')
-        
-        # Apply the filters to the input audio
-        low_output = ss.lfilter(low_b[0], low_b[1], self.audio_data) * low_gain
-        mid_output = ss.lfilter(mid_b[0], mid_b[1], self.audio_data) * mid_gain
-        high_output = ss.lfilter(high_b[0], high_b[1], self.audio_data) * high_gain
-        
-        # Combine the outputs to create the equalized audio
-        equalized_audio = low_output + mid_output + high_output
-        
-        self.audio_data = equalized_audio
+    def apply_equalizer(self, low_gain=1.0, mid_gain=1.0, high_gain=25.0):
+        # Ensure the audio_data is in float32 format
+        audio_data = self.audio_data.astype(np.float32)
 
-    # Volume Boost Effect
-    def apply_volume_boost(self, gain=1000.0):
-        self.audio_data *= gain
+        # Ensure stereo audio has shape (n_samples, 2)
+        if audio_data.shape[1] != 2:
+            raise ValueError("Input audio data should have shape (n_samples, 2) for stereo audio.")
+
+        # Normalize audio to the range [-1, 1]
+        audio_data /= np.max(np.abs(audio_data))
+
+        # Calculate the frequency axis for the FFT
+        n_samples = audio_data.shape[0]
+        freq_axis = np.fft.fftfreq(n_samples, d=1.0 / self.sample_rate)
+
+        # Initialize an array to store the frequency response
+        freq_response = np.ones(n_samples)
+
+        # Define frequency bands for low, mid, and high frequencies
+        low_freq_range = (0, 1000)  # Adjust as needed
+        mid_freq_range = (1000, 5000)  # Adjust as needed
+        high_freq_range = (5000, 20000)  # Adjust as needed
+
+        # Apply gain adjustments for each frequency band
+        for freq_range, gain in [(low_freq_range, low_gain), (mid_freq_range, mid_gain), (high_freq_range, high_gain)]:
+            low_freq, high_freq = freq_range
+            # Create a filter that boosts or attenuates the specified frequency range
+            filter_mask = (freq_axis >= low_freq) & (freq_axis <= high_freq)
+            freq_response[filter_mask] *= gain
+
+        # Apply the frequency response to the audio signal using inverse FFT
+        equalized_audio = np.fft.ifft(np.fft.fft(audio_data, axis=0) * freq_response[:, np.newaxis], axis=0).real
+
+        print(equalized_audio.shape)
+
+        self.audio_data = equalized_audio
 
     # Distortion Effect
     def apply_distortion(self, gain=50.0):
@@ -95,31 +107,45 @@ class Effects():
         
         self.audio_data = output_data
 
-    def apply_low_pass_filter(self, cutoff_frequency=500, order=2):
-        # Calculate the Nyquist frequency
-        nyquist = 0.5 * self.sample_rate
+    def apply_reverb(self, delay_lengths=[44100, 48000, 53700], feedback=0.5):
+        audio_data = self.audio_data.astype(np.float32)
 
-        # Calculate the normalized cutoff frequency
-        normalized_cutoff = cutoff_frequency / nyquist
+        # Ensure stereo audio has shape (n_samples, 2)
+        if audio_data.shape[1] != 2:
+            raise ValueError("Input audio data should have shape (n_samples, 2) for stereo audio.")
 
-        # Design the low-pass filter
-        b, a = ss.butter(order, normalized_cutoff, btype='low')
+        # Normalize audio to the range [-1, 1]
+        audio_data /= np.max(np.abs(audio_data))
 
-        # Apply the filter to the input audio
-        filtered_audio = ss.lfilter(b, a, self.audio_data)
+        # Initialize the reverb taps with zeros
+        reverb_taps = [np.zeros(max(delay_lengths)) for _ in range(len(delay_lengths))]
 
-        self.audio_data = filtered_audio
+        # Create an empty array to store the reverb output
+        reverb_output = np.zeros_like(audio_data)
+
+        # Apply the reverb effect
+        for i in range(len(audio_data)):
+            for j, delay_length in enumerate(delay_lengths):
+                # Calculate the output for each tap (comb filter)
+                if i >= delay_length:
+                    reverb_taps[j][i % delay_length] = audio_data[i] + feedback * reverb_taps[j][i % delay_length]
+                else:
+                    reverb_taps[j][i] = audio_data[i] + feedback * reverb_taps[j][i]
+
+                # Sum the outputs from all taps
+                reverb_output[i] += reverb_taps[j][i % delay_length]
+
+        self.audio_data = reverb_output
 
     def save_audio(self):
-        write("output/output_audio.wav", 48000, self.audio_data)
+        write("output/output_audio.wav", 48000, self.audio_data.astype(np.int16))
         plt.plot(self.audio_data)
         plt.show()
     
 effects = Effects("audios/audio_file.wav")
 #effects.apply_compressor()
 #effects.apply_distortion()
-#effects.apply_equalizer(low_gain=50.0)
-#effects.apply_low_pass_filter()
-#effects.apply_volume_boost()
+#effects.apply_equalizer()
+effects.apply_reverb()
 
 effects.save_audio()
