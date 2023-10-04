@@ -15,6 +15,7 @@ class Effects():
         print(sample_rate)
         print(audio_data.shape)
 
+        # Plotting the original signal
         plt.plot(audio_data)
         plt.show()
 
@@ -81,8 +82,6 @@ class Effects():
         # Apply the frequency response to the audio signal using inverse FFT
         equalized_audio = np.fft.ifft(np.fft.fft(audio_data, axis=0) * freq_response[:, np.newaxis], axis=0).real
 
-        print(equalized_audio.shape)
-
         self.audio_data = equalized_audio
 
     # Distortion Effect
@@ -140,6 +139,8 @@ class Effects():
 
     def save_audio(self):
         write("output/output_audio.wav", 48000, self.audio_data.astype(np.int16))
+
+        # Plotting the resulted signal
         plt.plot(self.audio_data)
         plt.show()
 
