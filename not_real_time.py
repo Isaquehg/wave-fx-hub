@@ -18,6 +18,15 @@ class Effects():
         plt.plot(audio_data)
         plt.show()
 
+    def increase_amplitude(self, scaling_factor):
+        # Ensure the audio_data is in float32 format
+        amplified_audio = self.audio_data.astype(np.float32)
+
+        # Increase the amplitude by multiplying with the scaling factor
+        amplified_audio *= scaling_factor
+
+        self.audio_data = amplified_audio
+
     # Compressor Effect
     def apply_compressor(self, threshold=-20, ratio=4, attack_time=10):
         output_data = np.zeros_like(self.audio_data)
@@ -39,7 +48,7 @@ class Effects():
         self.audio_data = output_data
 
     # Equalizer Effect
-    def apply_equalizer(self, low_gain=1.0, mid_gain=1.0, high_gain=25.0):
+    def apply_equalizer(self, low_gain=1.0, mid_gain=1.0, high_gain=2.0):
         # Ensure the audio_data is in float32 format
         audio_data = self.audio_data.astype(np.float32)
 
@@ -89,25 +98,23 @@ class Effects():
         self.audio_data = distorted_audio
 
     # Pitch Shift Effect
-    def apply_pitch_shift(self, desired_length=1024):
-        # Calculate the pitch shift factor
-        
+    def apply_pitch_shift(self, pitch_shift_factor=1.5):
+        # Ensure the audio_data is in float32 format
+        audio_data = self.audio_data.astype(np.float32)
+
+        # Normalize audio to the range [-1, 1]
+        audio_data /= np.max(np.abs(audio_data))
+
         # Calculate the desired output length
-        output_length = int(desired_length)
-        
-        # Create a time array for the input data
-        input_time = np.arange(len(self.audio_data))
-        
-        # Create a time array for the output data
-        output_time = np.arange(output_length) * (len(self.audio_data) / output_length)
-        
-        # Use interpolation to resample the input audio to the desired length
-        interpolator = si.interp1d(input_time, self, kind='linear', fill_value="extrapolate")
-        output_data = interpolator(output_time)
-        
+        output_length = int(len(audio_data) / pitch_shift_factor)
+
+        # Use the scipy.signal.resample function for pitch shifting
+        output_data = ss.resample(audio_data, output_length)
+
         self.audio_data = output_data
 
-    def apply_reverb(self, delay_lengths=[44100, 48000, 53700], feedback=0.5):
+    def apply_delay(self, delay_ms=500, feedback=0.1):
+        # Ensure the audio_data is in float32 format
         audio_data = self.audio_data.astype(np.float32)
 
         # Ensure stereo audio has shape (n_samples, 2)
@@ -117,25 +124,19 @@ class Effects():
         # Normalize audio to the range [-1, 1]
         audio_data /= np.max(np.abs(audio_data))
 
-        # Initialize the reverb taps with lists
-        reverb_taps = [list(np.zeros(delay_length)) for delay_length in delay_lengths]
+        # Calculate the delay in samples
+        delay_samples = int((delay_ms / 1000) * self.sample_rate)
 
-        # Create an empty array to store the reverb output
-        reverb_output = np.zeros_like(audio_data)
+        # Create an empty array to store the delayed audio
+        delayed_audio = np.zeros_like(audio_data)
 
-        # Apply the reverb effect
+        # Apply the delay effect
         for i in range(len(audio_data)):
-            for j, delay_length in enumerate(delay_lengths):
-                # Calculate the output for each tap (comb filter)
-                if i >= delay_length:
-                    reverb_taps[j].append(audio_data[i] + feedback * reverb_taps[j].pop(0))
-                else:
-                    reverb_taps[j].append(audio_data[i] + feedback * reverb_taps[j][-1])
+            if i >= delay_samples:
+                delayed_audio[i] = audio_data[i] + feedback * delayed_audio[i - delay_samples]
 
-                # Sum the outputs from all taps
-                reverb_output[i] += reverb_taps[j][-1]
+        self.audio_data = delayed_audio
 
-        self.audio_data = reverb_output
 
     def save_audio(self):
         write("output/output_audio.wav", 48000, self.audio_data.astype(np.int16))
@@ -146,7 +147,11 @@ class Effects():
 effects = Effects("audios/audio_file.wav")
 #effects.apply_compressor()
 #effects.apply_distortion()
+
+# PS.: APPLY increase_amplitude(3000.0) WHEN USING apply_equalizer() OR apply_delay()!!!
 #effects.apply_equalizer()
-effects.apply_reverb()
+#effects.apply_delay()
+effects.apply_pitch_shift()
+effects.increase_amplitude(3000.0)
 
 effects.save_audio()
