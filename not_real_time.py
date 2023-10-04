@@ -148,7 +148,7 @@ effects = Effects("audios/audio_file.wav")
 #effects.apply_compressor()
 #effects.apply_distortion()
 
-# PS.: APPLY increase_amplitude(3000.0) WHEN USING apply_equalizer() OR apply_delay()!!!
+# PS.: APPLY increase_amplitude(3000.0) WHEN USING apply_equalizer() OR apply_delay() OR apply_pitch_shift()!!!
 #effects.apply_equalizer()
 #effects.apply_delay()
 effects.apply_pitch_shift()
