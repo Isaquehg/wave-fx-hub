@@ -49,7 +49,7 @@ class Effects():
         self.audio_data = output_data
 
     # Equalizer Effect
-    def apply_equalizer(self, low_gain=1.0, mid_gain=1.0, high_gain=2.0):
+    def apply_equalizer(self, low_gain=10.0, mid_gain=1.0, high_gain=1.0):
         # Ensure the audio_data is in float32 format
         audio_data = self.audio_data.astype(np.float32)
 
@@ -150,8 +150,8 @@ effects = Effects("audios/audio_file.wav")
 #effects.apply_distortion()
 
 # PS.: APPLY increase_amplitude(3000.0) WHEN USING apply_equalizer() OR apply_delay() OR apply_pitch_shift()!!!
-#effects.apply_equalizer()
-effects.apply_delay()
+effects.apply_equalizer()
+#effects.apply_delay()
 #effects.apply_pitch_shift()
 effects.increase_amplitude(3000.0)
 
