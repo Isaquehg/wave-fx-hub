@@ -1,4 +1,6 @@
 from UI import App
+from not_real_time import Effects
 
-ui = App()
+effects = Effects()
+ui = App(effects)
 ui.mainloop()
