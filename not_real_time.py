@@ -5,19 +5,16 @@ import scipy.interpolate as si
 from scipy.io.wavfile import read, write
 
 class Effects():
-    def __init__(self, path_to_file: str) -> None:
-        # Import audio file -> 48kHz sample rate
-        sample_rate, audio_data = read(path_to_file)
+    def __init__(self) -> None:
+        pass
+        # Plotting the original signal
+        #plt.plot(audio_data)
+        #plt.show()
 
+    def set_file_path(self, path_to_file: str):
+        sample_rate, audio_data = read(path_to_file)
         self.sample_rate = sample_rate
         self.audio_data = audio_data
-
-        print(sample_rate)
-        print(audio_data.shape)
-
-        # Plotting the original signal
-        plt.plot(audio_data)
-        plt.show()
 
     def increase_amplitude(self, scaling_factor):
         # Ensure the audio_data is in float32 format
@@ -141,8 +138,8 @@ class Effects():
         write("output/output_audio.wav", 48000, self.audio_data.astype(np.int16))
 
         # Plotting the resulted signal
-        plt.plot(self.audio_data)
-        plt.show()
+        #plt.plot(self.audio_data)
+        #plt.show()
 
 
 effects = Effects("audios/audio_file.wav")
