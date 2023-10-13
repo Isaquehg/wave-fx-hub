@@ -7,14 +7,14 @@ from scipy.io.wavfile import read, write
 class Effects():
     def __init__(self) -> None:
         pass
-        # Plotting the original signal
-        #plt.plot(audio_data)
-        #plt.show()
 
     def set_file_path(self, path_to_file: str):
         sample_rate, audio_data = read(path_to_file)
         self.sample_rate = sample_rate
         self.audio_data = audio_data
+        # Plotting the original signal
+        #plt.plot(audio_data)
+        #plt.show()
 
     def increase_amplitude(self, scaling_factor):
         # Ensure the audio_data is in float32 format
@@ -142,6 +142,7 @@ class Effects():
         #plt.show()
 
 
+'''
 effects = Effects("audios/audio_file.wav")
 #effects.apply_compressor()
 #effects.apply_distortion()
@@ -153,3 +154,4 @@ effects.apply_equalizer()
 effects.increase_amplitude(3000.0)
 
 effects.save_audio()
+'''
