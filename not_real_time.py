@@ -14,6 +14,7 @@ class Effects():
         self.audio_data = audio_data
         print("Path to file:")
         print(path_to_file)
+        print(self.audio_data)
         # Plotting the original signal
         #plt.plot(audio_data)
         #plt.show()
@@ -139,21 +140,25 @@ class Effects():
     def save_audio(self):
         write("output/output_audio.wav", 48000, self.audio_data.astype(np.int16))
 
-        return True
         # Plotting the resulted signal
-        #plt.plot(self.audio_data)
-        #plt.show()
+        print("New Max value:")
+        print(max(self.audio_data[0]))
+        plt.plot(self.audio_data)
+        plt.show()
+
+        return True
 
 
 '''
-effects = Effects("audios/audio_file.wav")
-#effects.apply_compressor()
-#effects.apply_distortion()
+effects = Effects()
+effects.set_file_path("audios/audio_file.wav")
+effects.apply_compressor()
+effects.apply_distortion()
 
 # PS.: APPLY increase_amplitude(3000.0) WHEN USING apply_equalizer() OR apply_delay() OR apply_pitch_shift()!!!
 effects.apply_equalizer()
-#effects.apply_delay()
-#effects.apply_pitch_shift()
+effects.apply_delay()
+effects.apply_pitch_shift()
 effects.increase_amplitude(3000.0)
 
 effects.save_audio()

@@ -10,6 +10,7 @@ class App(customtkinter.CTk):
         # FX Config.
         self.effects = Effects()
         self.params = {}
+        self.again = False
 
         # CustomTkinter config.
         self.title("WaveFX")
@@ -79,8 +80,8 @@ class App(customtkinter.CTk):
         self.button_set_path.place(relx=0.6, rely=0.1, anchor=CENTER)
 
         # Process file
-        self.button_fechar = customtkinter.CTkButton(self, text="Process Effects!", command=self.button_event_processar)
-        self.button_fechar.place(relx=0.5, rely=0.8, anchor=CENTER)
+        self.button_process = customtkinter.CTkButton(self, text="Process Effects!", command=self.button_event_process, state='disabled')
+        self.button_process.place(relx=0.5, rely=0.8, anchor=CENTER)
 
         # Progress Bar
         self.progressbar = customtkinter.CTkProgressBar(self, orientation="horizontal", mode='determinate', determinate_speed=2)
@@ -89,8 +90,15 @@ class App(customtkinter.CTk):
 
 
     def button_event_set_path(self):
+        # Reset to initial state, if needed
+        if(self.again):
+            self.progressbar.stop()
+            self.effects = Effects()
+
+        # Setting audio file path   
         self.effects.set_file_path(self.entry.get())
         self.initial_modification_time = os.path.getmtime("output/output_audio.wav")
+        self.button_process.configure(state='normal') # Enable processing effects button
 
     def checkbox_event_equalizer(self):
        pass
@@ -128,40 +136,47 @@ class App(customtkinter.CTk):
     def vol_boost_slider_event(self, value):
         pass
 
-    def button_event_processar(self):
+    def button_event_process(self):
         # Starting progress bar
         self.progressbar.start()
 
         # Applying all parameters from the sliders and saving it
-        if(self.equalizer_checkbox.get() == 1):
+        if(self.equalizer_checkbox.get() == 'on'):
             self.params['eq_low'] = self.equalizer_low_slider.get()
             self.params['eq_med'] = self.equalizer_med_slider.get()
             self.params['eq_high'] = self.equalizer_high_slider.get()
 
-            self.effects.apply_equalizer(self.params['eq_low'], self.params['eq_med'], self.params['eq_high'])
+            self.effects.apply_equalizer(float(self.params['eq_low']), float(self.params['eq_med']), float(self.params['eq_high']))
 
-        if(self.compressor_checkbox.get() == 1):
+        if(self.compressor_checkbox.get() == 'on'):
             self.params['comp_threshold'] = self.compressor_threshold_slider.get()
             self.params['comp_ratio'] = self.compressor_ratio_slider.get()
             self.params['comp_attack'] = self.compressor_attack_slider.get()
 
-            self.effects.apply_compressor(self.params['comp_threshold'], self.params['comp_ratio'], self.params['comp_attack'])
+            self.effects.apply_compressor(int(self.params['comp_threshold']), int(self.params['comp_ratio']), int(self.params['comp_attack']))
 
-        if(self.distortion_checkbox.get() == 1):
-            self.params['dist_gain'] = float(self.distortion_slider.get())
+        if(self.distortion_checkbox.get() == 'on'):
+            self.params['dist_gain'] = self.distortion_slider.get()
+            print("Distortion Gain:")
+            print(self.params['dist_gain'])
 
-            self.effects.apply_distortion(self.params['dist_gain'])
+            self.effects.apply_distortion(float(self.params['dist_gain']))
 
-        if(self.delay_checkbox.get() == 1):
+        if(self.delay_checkbox.get() == 'on'):
             self.params['delay_ms'] = self.delay_ms_slider.get()
             self.params['delay_feedback'] = self.delay_feedback_slider.get()
 
-            self.effects.apply_delay(self.params['delay_ms'], self.params['delay_feedback'])
+            self.effects.apply_delay(int(self.params['delay_ms']), float(self.params['delay_feedback']))
 
-        if(self.pitch_shift_checkbox.get() == 1):
+        if(self.pitch_shift_checkbox.get() == 'on'):
             self.params['ps_factor'] = self.pitch_shift_slider.get()
 
-            self.effects.apply_pitch_shift(self.params['ps_factor'])
+            self.effects.apply_pitch_shift(float(self.params['ps_factor']))
+
+        if(self.vol_boost_checkbox.get() == 'on'):
+            self.params['vol_boost'] = self.vol_boost_slider.get()
+
+            self.effects.increase_amplitude(int(self.params['vol_boost']))
 
         processed = self.effects.save_audio()
 
@@ -170,7 +185,7 @@ class App(customtkinter.CTk):
             current_modification_time = os.path.getmtime("output/output_audio.wav")
             if(current_modification_time > self.initial_modification_time):
                 print("File processed!")
-                self.progressbar.stop()
+                self.again = True
 
 app = App()
 app.mainloop()
