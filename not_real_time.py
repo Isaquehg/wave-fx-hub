@@ -12,6 +12,8 @@ class Effects():
         sample_rate, audio_data = read(path_to_file)
         self.sample_rate = sample_rate
         self.audio_data = audio_data
+        print("Path to file:")
+        print(path_to_file)
         # Plotting the original signal
         #plt.plot(audio_data)
         #plt.show()
@@ -137,6 +139,7 @@ class Effects():
     def save_audio(self):
         write("output/output_audio.wav", 48000, self.audio_data.astype(np.int16))
 
+        return True
         # Plotting the resulted signal
         #plt.plot(self.audio_data)
         #plt.show()
