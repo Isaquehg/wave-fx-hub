@@ -79,5 +79,3 @@ Contributions to WaveFX Hub are welcome! If you would like to contribute to the 
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
-This is a basic structure for your GitHub documentation. You can create separate Markdown files for each section and provide more details, code examples, and usage instructions as needed. Additionally, consider using a documentation generation tool for a more professional and maintainable documentation setup.
